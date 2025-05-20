@@ -1,7 +1,11 @@
 package com.ecommerce.ui;
 
 import com.ecommerce.model.Product;
+import com.ecommerce.model.ProductWithEmbedding;
+import com.ecommerce.service.EmbeddingSearchService;
 import com.ecommerce.service.ProductSearchService;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -10,6 +14,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
+import java.io.*;
+import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -24,17 +30,20 @@ public class ProductSearchApp extends Application {
     private VBox paginationBox;
     private boolean isShowingHot = false;
     private boolean searching = false;
+    private List<ProductWithEmbedding> allEmbeddedProducts = new ArrayList<>();
 
     @Override
     public void start(Stage stage) {
         searchService = new ProductSearchService();
-
         try {
             Path path = Paths.get(System.getProperty("user.dir"), "src", "main", "resources", "product_texts.json");
             searchService.loadProductsFromJson(path.toString());
+
+            allEmbeddedProducts = loadEmbeddedProducts("src/main/resources/embedded_products.json");
+
         } catch (Exception e) {
             e.printStackTrace();
-            System.err.println("\u274c Kh\u00f4ng th\u1ec3 t\u1ea3i d\u1eef li\u1ec7u s\u1ea3n ph\u1ea9m: " + e.getMessage());
+            System.err.println("\u274c Kh\u00f4ng th\u1ec3 t\u1ea3i d\u1eef li\u1ec7u s\u1ea3n ph\u1ea9m ho\u1eb7c embedding.");
             return;
         }
 
@@ -54,19 +63,21 @@ public class ProductSearchApp extends Application {
         searchBox.setPadding(new Insets(10));
         searchBox.getStyleClass().add("search-container");
 
+        CheckBox useLLMCheckBox = new CheckBox("\ud83e\udde0 T\u00ecm ki\u1ebfm n\u00e2ng cao");
+        useLLMCheckBox.setSelected(false);
+        useLLMCheckBox.getStyleClass().add("checkbox-llm");
+
         Label suggestion = new Label("G\u1ee3i \u00fd: \"T\u1ee7 l\u1ea1nh d\u01b0\u1edbi 10 tri\u1ec7u\", \"S\u1ea3n ph\u1ea9m cho 4-5 ng\u01b0\u1eddi\"...");
         suggestion.getStyleClass().add("suggestion");
+
+        VBox searchSection = new VBox(5, searchBox, useLLMCheckBox, suggestion);
+        searchSection.setAlignment(Pos.CENTER);
 
         HBox categoryButtons = new HBox(10);
         categoryButtons.setAlignment(Pos.CENTER);
         categoryButtons.setPadding(new Insets(10));
 
         String[] categories = {"T\u1ee7 l\u1ea1nh", "M\u00e1y gi\u1eb7t", "Tivi", "\u0110i\u1ec1u h\u00f2a"};
-        Button homeButton = new Button("🏠 Trang chủ");
-        homeButton.getStyleClass().add("category-button");
-        homeButton.setOnAction(e -> showFeaturedProducts());
-        categoryButtons.getChildren().add(0, homeButton); // thêm đầu danh sách
-
         for (String category : categories) {
             Button btn = new Button(category);
             btn.getStyleClass().add("category-button");
@@ -86,8 +97,7 @@ public class ProductSearchApp extends Application {
 
         VBox content = new VBox(15,
                 title,
-                searchBox,
-                suggestion,
+                searchSection,
                 categoryButtons,
                 productFlow,
                 paginationBox
@@ -109,8 +119,28 @@ public class ProductSearchApp extends Application {
         Runnable searchHandler = () -> {
             isShowingHot = false;
             searching = true;
-            String keyword = searchField.getText();
-            currentResults = searchService.searchProducts(keyword);
+
+            String query = searchField.getText();
+
+            if (useLLMCheckBox.isSelected()) {
+                float[] queryVector = callPythonEmbeddingService(query);
+                List<ProductWithEmbedding> matches = EmbeddingSearchService.searchByVector(queryVector, allEmbeddedProducts, 12);
+
+                currentResults = matches.stream()
+                        .map(p -> new Product(
+                                p.getTenSanPham(),
+                                p.getAnh(),
+                                p.getGia(),
+                                p.getMoTaSanPham(),
+                                p.getDiemDanhGiaTrungBinh(),
+                                p.getSoLuotDanhGia(),
+                                p.getNguonDuLieu(),
+                                p.getLoaiSanPham()
+                        )).collect(Collectors.toList());
+            } else {
+                currentResults = searchService.searchProducts(query);
+            }
+
             currentPage = 1;
             updatePage();
         };
@@ -119,6 +149,57 @@ public class ProductSearchApp extends Application {
         searchButton.setOnAction(e -> searchHandler.run());
 
         showFeaturedProducts();
+    }
+
+    // --- Hàm phụ trợ ---
+
+    public static List<ProductWithEmbedding> loadEmbeddedProducts(String filePath) {
+        try (Reader reader = new FileReader(filePath)) {
+            Gson gson = new Gson();
+            Type listType = new TypeToken<List<ProductWithEmbedding>>() {}.getType();
+            return gson.fromJson(reader, listType);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    public static float[] callPythonEmbeddingService(String query) {
+        try {
+            ProcessBuilder pb = new ProcessBuilder(
+                    "C:/Users/Dell/AppData/Local/Programs/Python/Python310/python.exe",
+                    "embed_query.py",
+                    query
+            );
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+
+            StringBuilder output = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line).append("\n");
+                }
+            }
+
+            // ✅ Nếu có dòng bắt đầu bằng "Traceback", tức là lỗi
+            if (output.toString().contains("Traceback")) {
+                System.err.println("❌ Python script error:\n" + output);
+                return new float[0];
+            }
+
+            // ✅ Lấy dòng đầu tiên có chứa vector
+            String[] parts = output.toString().trim().replace("[", "").replace("]", "").split(",");
+            float[] vector = new float[parts.length];
+            for (int i = 0; i < parts.length; i++) {
+                vector[i] = Float.parseFloat(parts[i].trim());
+            }
+            return vector;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new float[0];
+        }
     }
 
     private void showFeaturedProducts() {
@@ -207,4 +288,5 @@ public class ProductSearchApp extends Application {
         pagination.getChildren().addAll(prev, pageInfo, next);
         paginationBox.getChildren().add(pagination);
     }
+
 }
