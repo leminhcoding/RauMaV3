@@ -1,0 +1,134 @@
+/* ======= Khung tổng ======= */
+.title {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2e7dff;
+}
+
+.search-box {
+    -fx-font-size: 14px;
+    -fx-pref-width: 600px;
+    -fx-background-radius: 25;
+    -fx-padding: 8 15;
+    -fx-border-color: lightgray;
+    -fx-border-radius: 25;
+    -fx-background-color: white;
+}
+
+.search-button {
+    -fx-background-color: #2e7dff;
+    -fx-text-fill: white;
+    -fx-background-radius: 25;
+    -fx-padding: 8 20;
+    -fx-font-weight: bold;
+}
+
+.search-button:hover {
+    -fx-background-color: #1b5fd1;
+    -fx-cursor: hand;
+}
+
+.suggestion {
+    -fx-font-size: 13px;
+    -fx-text-fill: #666;
+}
+
+/* ======= Thẻ sản phẩm ======= */
+.product-card {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-color: #ddd;
+    -fx-border-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 3);
+    -fx-padding: 10;
+}
+
+.product-card:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0.3, 0, 4);
+    -fx-cursor: hand;
+}
+
+.product-name {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333;
+}
+
+.product-rating {
+    -fx-text-fill: #777;
+    -fx-font-size: 13px;
+}
+
+.product-price {
+    -fx-text-fill: red;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.product-desc {
+    -fx-text-fill: #444;
+    -fx-font-size: 13px;
+}
+
+.detail-button {
+    -fx-background-color: white;
+    -fx-border-color: #2e7dff;
+    -fx-text-fill: #2e7dff;
+    -fx-border-radius: 5;
+    -fx-padding: 5 12;
+}
+
+.detail-button:hover {
+    -fx-background-color: #e6f0ff;
+    -fx-cursor: hand;
+}
+
+/* ======= Badge nổi bật ======= */
+.badge {
+    -fx-background-color: #2ecc71;
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 3 8;
+    -fx-background-radius: 15;
+}
+.scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+.hot-badge {
+    -fx-background-color: #e74c3c;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 3 8;
+    -fx-background-radius: 15;
+}
+.category-button {
+    -fx-background-color: #eeeeee;
+    -fx-font-weight: bold;
+    -fx-padding: 8 16;
+    -fx-background-radius: 20;
+    -fx-border-color: #ccc;
+    -fx-border-radius: 20;
+}
+
+.category-button:hover {
+    -fx-background-color: #d0e8ff;
+    -fx-cursor: hand;
+}
+.category-button {
+    -fx-background-color: #eeeeee;
+    -fx-font-weight: bold;
+    -fx-padding: 8 16;
+    -fx-background-radius: 20;
+    -fx-border-color: #ccc;
+    -fx-border-radius: 20;
+}
+
+.category-button:hover {
+    -fx-background-color: #d0e8ff;
+    -fx-cursor: hand;
+}
