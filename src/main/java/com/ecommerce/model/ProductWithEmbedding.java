@@ -65,4 +65,18 @@ public class ProductWithEmbedding {
     public float[] getEmbedding() {
         return embedding;
     }
+
+    // ✅ Thêm method toProduct()
+    public Product toProduct() {
+        return new Product(
+                getTenSanPham(),
+                getAnh(),
+                getGia(),
+                getMoTaSanPham(),
+                getDiemDanhGiaTrungBinh(),
+                getSoLuotDanhGia(),
+                getNguonDuLieu(),
+                getLoaiSanPham()
+        );
+    }
 }
