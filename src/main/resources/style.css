@@ -11,14 +11,14 @@
     -fx-background-radius: 25;
     -fx-padding: 8 15;
     -fx-border-color: lightgray;
-    -fx-border-radius: 25;
+    -fx-border-radius: 10;
     -fx-background-color: white;
 }
 
 .search-button {
     -fx-background-color: #2e7dff;
     -fx-text-fill: white;
-    -fx-background-radius: 25;
+    -fx-background-radius: 10;
     -fx-padding: 8 20;
     -fx-font-weight: bold;
 }
@@ -110,9 +110,9 @@
     -fx-background-color: #eeeeee;
     -fx-font-weight: bold;
     -fx-padding: 8 16;
-    -fx-background-radius: 20;
+    -fx-background-radius: 5;
     -fx-border-color: #ccc;
-    -fx-border-radius: 20;
+    -fx-border-radius: 5;
 }
 
 .category-button:hover {
@@ -123,9 +123,9 @@
     -fx-background-color: #eeeeee;
     -fx-font-weight: bold;
     -fx-padding: 8 16;
-    -fx-background-radius: 20;
+    -fx-background-radius: 5;
     -fx-border-color: #ccc;
-    -fx-border-radius: 20;
+    -fx-border-radius: 5;
 }
 
 .category-button:hover {
