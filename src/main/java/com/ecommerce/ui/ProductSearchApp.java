@@ -8,6 +8,8 @@ import com.ecommerce.service.ProductSearchService;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -15,7 +17,6 @@ import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import javafx.scene.layout.HBox;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -34,6 +35,7 @@ public class ProductSearchApp extends Application {
     private boolean isShowingHot = false;
     private boolean searching = false;
     private List<ProductWithEmbedding> allEmbeddedProducts = new ArrayList<>();
+    private Label loadingLabel = new Label("🔎 Đang tìm kiếm, vui lòng chờ...");
 
     @Override
     public void start(Stage stage) {
@@ -44,26 +46,21 @@ public class ProductSearchApp extends Application {
             allEmbeddedProducts = loadEmbeddedProducts("src/main/resources/embedded_products.json");
         } catch (Exception e) {
             e.printStackTrace();
-            System.err.println("\u274c Không thể tải dữ liệu sản phẩm hoặc embedding.");
+            System.err.println("❌ Không thể tải dữ liệu sản phẩm hoặc embedding.");
             return;
         }
 
-        // --- Sidebar (Logo + Categories) ---
         ImageView logoView = new ImageView("file:src/main/resources/logo.png");
         logoView.setFitWidth(120);
         logoView.setPreserveRatio(true);
-        logoView.setSmooth(true);
-        logoView.setCache(true);
         VBox logoBox = new VBox(logoView);
         logoBox.setAlignment(Pos.CENTER);
         logoBox.setPadding(new Insets(10, 0, 20, 0));
         logoBox.getStyleClass().add("logo-box");
 
         Label categoriesLabel = new Label("Danh mục");
-        categoriesLabel.getStyleClass().add("sidebar-title");
         categoriesLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; margin-bottom: 10px;");
-        VBox categoryBox = new VBox(15);
-        categoryBox.getChildren().add(categoriesLabel);
+        VBox categoryBox = new VBox(15, categoriesLabel);
         String[] categories = {"Tủ lạnh", "Máy giặt", "Tivi", "Điều hòa"};
         for (String category : categories) {
             Button btn = new Button(category);
@@ -73,45 +70,31 @@ public class ProductSearchApp extends Application {
             categoryBox.getChildren().add(btn);
         }
         categoryBox.setAlignment(Pos.TOP_CENTER);
-        categoryBox.setPadding(new Insets(0, 0, 0, 0));
 
         VBox sidebar = new VBox(logoBox, categoryBox);
-        sidebar.setPadding(new Insets(20, 10, 20, 10));
+        sidebar.setPadding(new Insets(20));
         sidebar.setStyle("-fx-background-color: #f0f0f0;");
         sidebar.setPrefWidth(180);
         sidebar.setAlignment(Pos.TOP_CENTER);
 
-        // --- Separator (extends to the right) ---
-        Separator verticalSeparator = new Separator();
-        verticalSeparator.setOrientation(Orientation.VERTICAL);
-        verticalSeparator.setPrefHeight(600); // Adjust as needed
-        verticalSeparator.setStyle("-fx-background-color: #cccccc;");
+        Separator verticalSeparator = new Separator(Orientation.VERTICAL);
+        verticalSeparator.setPrefHeight(600);
 
-        // --- Top Bar (Search) ---
         TextField searchField = new TextField();
         searchField.setPromptText("VD: Tủ lạnh dưới 5 triệu, sản phẩm cho gia đình 5 người...");
-        searchField.getStyleClass().add("search-box");
-
         ToggleButton toggleLLM = new ToggleButton("Chế độ tìm kiếm nâng cao");
-        toggleLLM.setSelected(false);
         toggleLLM.getStyleClass().add("llm-toggle");
-
-        Button searchButton = new Button("\ud83d\udd0d Tìm kiếm");
+        Button searchButton = new Button("🔍 Tìm kiếm");
         searchButton.getStyleClass().add("search-button");
 
-        HBox searchBox = new HBox(searchField, toggleLLM, searchButton);
+        HBox searchBox = new HBox(10, searchField, toggleLLM, searchButton);
         searchBox.setAlignment(Pos.CENTER_LEFT);
-        searchBox.setSpacing(10);
-        searchBox.setPadding(new Insets(10, 10, 10, 10));
-        searchBox.setStyle("-fx-background-color: #fff;");
+        searchBox.setPadding(new Insets(10));
         HBox.setHgrow(searchField, Priority.ALWAYS);
 
-        VBox topBar = new VBox(searchBox);
-        topBar.setSpacing(5);
+        VBox topBar = new VBox(5, searchBox);
         topBar.setPadding(new Insets(0, 0, 10, 0));
-        topBar.setStyle("-fx-background-color: #fff;");
 
-        // --- Product FlowPane (keep old logic) ---
         productFlow = new FlowPane();
         productFlow.setPadding(new Insets(20));
         productFlow.setHgap(20);
@@ -119,35 +102,22 @@ public class ProductSearchApp extends Application {
         productFlow.setPrefWrapLength(1000);
         productFlow.setAlignment(Pos.CENTER);
 
-        // --- Pagination (keep old logic) ---
+        loadingLabel.setVisible(false);
+        loadingLabel.getStyleClass().add("loading-label");
+
         paginationBox = new VBox();
         paginationBox.setAlignment(Pos.CENTER);
 
-        VBox productSection = new VBox(15,
-                topBar,
-                productFlow,
-                paginationBox
-        );
-        productSection.setAlignment(Pos.TOP_CENTER);
+        VBox productSection = new VBox(15, topBar, loadingLabel, productFlow, paginationBox);
         productSection.setPadding(new Insets(20));
 
-        // --- com horizontal layout: sidebar + separator + product section ---
         HBox comContent = new HBox(sidebar, verticalSeparator, productSection);
-        comContent.setAlignment(Pos.TOP_LEFT);
-        comContent.setSpacing(0);
         comContent.setStyle("-fx-background: #f5f5f5;");
 
-        // --- ScrollPane for com content ---
         ScrollPane scrollPane = new ScrollPane(comContent);
         scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background: #f5f5f5;");
 
-        // --- com Layout ---
-        BorderPane root = new BorderPane();
-        root.setCenter(scrollPane);
-        root.setTop(null);
-        root.setLeft(null);
-        root.setBottom(null);
+        BorderPane root = new BorderPane(scrollPane);
 
         Scene scene = new Scene(root, 1200, 850);
         scene.getStylesheets().add("file:src/main/resources/style.css");
@@ -155,43 +125,48 @@ public class ProductSearchApp extends Application {
         stage.setTitle("Tìm kiếm sản phẩm");
         stage.show();
 
-        // --- Handlers and product display logic (unchanged) ---
         Runnable searchHandler = () -> {
             isShowingHot = false;
             searching = true;
             String query = searchField.getText();
-            if (toggleLLM.isSelected()) {
-                float[] queryVector = callPythonEmbeddingService(query);
+            loadingLabel.setVisible(true);
 
-                // Danh sách danh mục có thể phát hiện từ truy vấn
-                List<String> knownCategories = Arrays.asList("Tủ lạnh", "Máy giặt", "Tivi", "Điều hòa");
+            Task<Void> searchTask = new Task<>() {
+                @Override
+                protected Void call() {
+                    List<Product> result;
+                    if (toggleLLM.isSelected()) {
+                        float[] queryVector = callPythonEmbeddingService(query);
+                        List<String> knownCategories = Arrays.asList("Tủ lạnh", "Máy giặt", "Tivi", "Điều hòa");
+                        String matchedCategory = knownCategories.stream()
+                                .filter(cat -> query.toLowerCase().contains(cat.toLowerCase()))
+                                .findFirst()
+                                .orElse(null);
 
-                // Tìm danh mục nào xuất hiện trong truy vấn
-                String matchedCategory = knownCategories.stream()
-                        .filter(cat -> query.toLowerCase().contains(cat.toLowerCase()))
-                        .findFirst()
-                        .orElse(null); // không có thì không ưu tiên gì
+                        List<ProductWithEmbedding> matches = EmbeddingSearchService.searchByVector(
+                                queryVector, query, allEmbeddedProducts, 0.4, matchedCategory
+                        );
+                        result = matches.stream().map(ProductWithEmbedding::toProduct).collect(Collectors.toList());
+                    } else {
+                        result = searchService.searchProducts(query);
+                    }
 
-                // Gọi hàm tìm kiếm nâng cao RAG
-                List<ProductWithEmbedding> matches = EmbeddingSearchService.searchByVector(
-                        queryVector, query, allEmbeddedProducts, 0.4, matchedCategory
-                );
-
-                // Lấy toàn bộ kết quả hợp lệ
-                currentResults = matches.stream()
-                        .map(ProductWithEmbedding::toProduct)
-                        .collect(Collectors.toList());
-            }
-
-            currentPage = 1;
-            updatePage();
+                    Platform.runLater(() -> {
+                        currentResults = result;
+                        currentPage = 1;
+                        updatePage();
+                        loadingLabel.setVisible(false);
+                    });
+                    return null;
+                }
+            };
+            new Thread(searchTask).start();
         };
+
         searchField.setOnAction(e -> searchHandler.run());
         searchButton.setOnAction(e -> searchHandler.run());
         showFeaturedProducts();
     }
-
-    // --- Hàm phụ trợ ---
 
     public static List<ProductWithEmbedding> loadEmbeddedProducts(String filePath) {
         try (Reader reader = new FileReader(filePath)) {
@@ -222,13 +197,11 @@ public class ProductSearchApp extends Application {
                 }
             }
 
-            // ✅ Nếu có dòng bắt đầu bằng "Traceback", tức là lỗi
             if (output.toString().contains("Traceback")) {
                 System.err.println("❌ Python script error:\n" + output);
                 return new float[0];
             }
 
-            // ✅ Lấy dòng đầu tiên có chứa vector
             String[] parts = output.toString().trim().replace("[", "").replace("]", "").split(",");
             float[] vector = new float[parts.length];
             for (int i = 0; i < parts.length; i++) {
@@ -260,7 +233,7 @@ public class ProductSearchApp extends Application {
                         return 0;
                     }
                 })
-                .collect(Collectors.toList()); // ❗ Không giới hạn 12 nữa
+                .collect(Collectors.toList());
 
         currentPage = 1;
         updatePage();
@@ -299,7 +272,7 @@ public class ProductSearchApp extends Application {
             Product p = currentResults.get(i);
 
             boolean isHot = isShowingHot && i < 3;
-            boolean isFeatured = !isShowingHot && !searching && i < 12; // ✅ i là index toàn cục
+            boolean isFeatured = !isShowingHot && !searching && i < 12;
             boolean showBadge = isHot || isFeatured;
 
             productFlow.getChildren().add(new ProductCardView(p, isHot, showBadge));
@@ -310,6 +283,7 @@ public class ProductSearchApp extends Application {
         pagination.setAlignment(Pos.CENTER);
 
         Button prev = new Button("Previous page");
+        prev.getStyleClass().add("pagination-button");
         prev.setDisable(currentPage == 1);
         prev.setOnAction(e -> {
             currentPage--;
@@ -317,6 +291,7 @@ public class ProductSearchApp extends Application {
         });
 
         Button next = new Button("Next page");
+        prev.getStyleClass().add("pagination-button");
         next.setDisable(currentPage == totalPages);
         next.setOnAction(e -> {
             currentPage++;
@@ -328,5 +303,4 @@ public class ProductSearchApp extends Application {
         pagination.getChildren().addAll(prev, pageInfo, next);
         paginationBox.getChildren().add(pagination);
     }
-
 }

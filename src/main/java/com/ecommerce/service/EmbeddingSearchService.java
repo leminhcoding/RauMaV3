@@ -68,7 +68,7 @@ public class EmbeddingSearchService {
         for (ProductWithEmbedding item : allProducts) {
             double sim = cosineSimilarity(queryEmbedding, item.getEmbedding());
 
-            if (sim >= 0.8) {  // ✅ lọc ngưỡng cosine ≥ 0.6
+            if (sim >= 0.4) {  // ✅ lọc ngưỡng cosine ≥ 0.6
                 scored.add(new AbstractMap.SimpleEntry<>(item.toProduct(), sim));
             }
         }

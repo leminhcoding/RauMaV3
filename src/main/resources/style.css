@@ -158,4 +158,12 @@
     -fx-background-color: #4caf50;
     -fx-text-fill: white;
     -fx-border-color: #3e8e41;
+}.loading-label {
+     -fx-font-style: italic;
+     -fx-text-fill: #777;
+ }
+.pagination-button {
+    -fx-background-color: #ecf0f1;
+    -fx-border-radius: 3;
+    -fx-padding: 5 15;
 }

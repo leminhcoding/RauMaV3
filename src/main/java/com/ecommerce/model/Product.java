@@ -69,13 +69,19 @@ public class Product {
     public String getProductType() { return productType; }
     public void setProductType(String productType) { this.productType = productType; }
 
-    public com.ecommerce.model.Specification[] extractSpecifications() {
+    public Specification[] extractSpecifications() {
         if (description == null || description.isEmpty()) return new Specification[0];
 
         String[][] patterns = {
                 { "Loại sản phẩm", "Kiểu tủ: ([^\\.]+)" },
                 { "Kiểu sản phẩm", "Loại Tivi: ([^\\.]+)" },
                 { "Loại máy giặt", "Loại máy giặt: ([^\\.]+)" },
+                { "Loại điều hòa", "Loại điều hòa: ([^\\.]+)" },
+                { "Công suất", "Công suất: ([^\\.]+)" },
+                { "Gas sử dụng", "Gas sử dụng: ([^\\.]+)" },
+                { "Kháng khuẩn", "Kháng khuẩn khử mùi: ([^\\.]+)" },
+                { "Công nghệ Inverter", "Công nghệ Inverter: ([^\\.]+)" },
+                { "Xuất xứ", "Xuất xứ \\(Made in\\): ([^\\.]+)" },
                 { "Dung tích sử dụng", "Dung tích sử dụng: ([^\\.]+)" },
                 { "Dung tích ngăn đá", "Dung tích ngăn đá: ([^\\.]+)" },
                 { "Dung tích ngăn lạnh", "Dung tích ngăn lạnh: ([^\\.]+)" },
@@ -114,7 +120,13 @@ public class Product {
                 { "Kiểu tủ", "Kiểu tủ: ([^\\.]+)" },
                 { "Loại Tivi", "Loại Tivi: ([^\\.]+)" },
                 { "Loại máy giặt", "Loại máy giặt: ([^\\.]+)" },
+                { "Loại điều hòa", "Loại điều hòa: ([^\\.]+)" },
+                { "Công suất", "Công suất: ([^\\.]+)" },
                 { "Sản xuất", "Sản xuất tại: ([^\\.]+)" },
+                { "Công nghệ Inverter", "Công nghệ Inverter: ([^\\.]+)" },
+                { "Gas", "Gas sử dụng: ([^\\.]+)" },
+                { "Kháng khuẩn", "Kháng khuẩn khử mùi: ([^\\.]+)" },
+                { "Xuất xứ", "Xuất xứ \\(Made in\\): ([^\\.]+)" },
                 { "Năm", "Năm ra mắt: ([^\\.]+)" }
         };
 
@@ -162,11 +174,5 @@ public class Product {
             return false;
         }
     }
-    public String getDiemDanhGiaTrungBinh() {
-        return rating;
-    }
 
-    public String getSoLuotDanhGia() {
-        return ratingCount;
-    }
 }
