@@ -69,7 +69,7 @@ public class Product {
     public String getProductType() { return productType; }
     public void setProductType(String productType) { this.productType = productType; }
 
-    public Specification[] extractSpecifications() {
+    public com.ecommerce.model.Specification[] extractSpecifications() {
         if (description == null || description.isEmpty()) return new Specification[0];
 
         String[][] patterns = {
@@ -161,5 +161,12 @@ public class Product {
         } catch (Exception e) {
             return false;
         }
+    }
+    public String getDiemDanhGiaTrungBinh() {
+        return rating;
+    }
+
+    public String getSoLuotDanhGia() {
+        return ratingCount;
     }
 }

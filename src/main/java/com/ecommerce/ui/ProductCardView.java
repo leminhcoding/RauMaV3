@@ -53,6 +53,8 @@ public class ProductCardView extends VBox {
         price.getStyleClass().add("product-price");
 
         // Mô tả nhanh
+        String shortDesc = p.extractKeyInfo();
+        if (shortDesc.isEmpty()) shortDesc = p.getDescription(); // fallback nếu không extract được
         Label desc = new Label(p.extractKeyInfo());
         desc.setWrapText(true);
         desc.getStyleClass().add("product-desc");

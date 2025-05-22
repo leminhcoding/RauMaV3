@@ -19,11 +19,44 @@ public class EmbeddingSearchService {
     }
 
     // Dùng để lấy top K gần nhất (tùy chọn)
-    public static List<ProductWithEmbedding> searchByVector(float[] query, List<ProductWithEmbedding> products, int topK) {
-        return products.stream()
-                .map(p -> new AbstractMap.SimpleEntry<>(p, cosineSimilarity(query, p.getEmbedding())))
-                .sorted((a, b) -> Double.compare(b.getValue(), a.getValue()))
-                .limit(topK)
+    public static List<ProductWithEmbedding> searchByVector(
+            float[] queryEmbedding,
+            String rawQuery,
+            List<ProductWithEmbedding> products,
+            double threshold,
+            String preferredCategory  // ví dụ: "Tủ lạnh"
+    ) {
+        String queryLower = rawQuery.toLowerCase();
+
+        List<Map.Entry<ProductWithEmbedding, Double>> scored = new ArrayList<>();
+
+        for (ProductWithEmbedding p : products) {
+            double score = cosineSimilarity(queryEmbedding, p.getEmbedding());
+
+            if (score >= threshold) {
+                if (p.getTenSanPham() != null && p.getTenSanPham().toLowerCase().contains(queryLower)) {
+                    score += 0.2;  // bonus nếu tên khớp từ khoá
+                }
+                scored.add(new AbstractMap.SimpleEntry<>(p, score));
+            }
+        }
+
+        // Sắp xếp: ưu tiên đúng danh mục, rồi theo điểm giảm dần
+        scored.sort((a, b) -> {
+            ProductWithEmbedding p1 = a.getKey();
+            ProductWithEmbedding p2 = b.getKey();
+
+            boolean cat1 = preferredCategory != null && preferredCategory.equalsIgnoreCase(p1.getLoaiSanPham());
+            boolean cat2 = preferredCategory != null && preferredCategory.equalsIgnoreCase(p2.getLoaiSanPham());
+
+            if (cat1 != cat2) {
+                return Boolean.compare(cat2, cat1); // true lên trước
+            }
+
+            return Double.compare(b.getValue(), a.getValue()); // điểm giảm dần
+        });
+
+        return scored.stream()
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
     }
@@ -35,7 +68,7 @@ public class EmbeddingSearchService {
         for (ProductWithEmbedding item : allProducts) {
             double sim = cosineSimilarity(queryEmbedding, item.getEmbedding());
 
-            if (sim >= 0.6) {  // ✅ lọc ngưỡng cosine ≥ 0.6
+            if (sim >= 0.8) {  // ✅ lọc ngưỡng cosine ≥ 0.6
                 scored.add(new AbstractMap.SimpleEntry<>(item.toProduct(), sim));
             }
         }

@@ -91,20 +91,22 @@ public class ProductSearchApp extends Application {
         TextField searchField = new TextField();
         searchField.setPromptText("VD: Tủ lạnh dưới 5 triệu, sản phẩm cho gia đình 5 người...");
         searchField.getStyleClass().add("search-box");
+
+        ToggleButton toggleLLM = new ToggleButton("Chế độ tìm kiếm nâng cao");
+        toggleLLM.setSelected(false);
+        toggleLLM.getStyleClass().add("llm-toggle");
+
         Button searchButton = new Button("\ud83d\udd0d Tìm kiếm");
         searchButton.getStyleClass().add("search-button");
-        HBox searchBox = new HBox(searchField, searchButton);
+
+        HBox searchBox = new HBox(searchField, toggleLLM, searchButton);
         searchBox.setAlignment(Pos.CENTER_LEFT);
         searchBox.setSpacing(10);
         searchBox.setPadding(new Insets(10, 10, 10, 10));
         searchBox.setStyle("-fx-background-color: #fff;");
         HBox.setHgrow(searchField, Priority.ALWAYS);
 
-        // --- Checkbox under search bar ---
-        CheckBox useLLMCheckBox = new CheckBox("\ud83e\udde0 Tìm kiếm nâng cao");
-        useLLMCheckBox.setSelected(false);
-        useLLMCheckBox.getStyleClass().add("checkbox-llm");
-        VBox topBar = new VBox(searchBox, useLLMCheckBox);
+        VBox topBar = new VBox(searchBox);
         topBar.setSpacing(5);
         topBar.setPadding(new Insets(0, 0, 10, 0));
         topBar.setStyle("-fx-background-color: #fff;");
@@ -158,23 +160,29 @@ public class ProductSearchApp extends Application {
             isShowingHot = false;
             searching = true;
             String query = searchField.getText();
-            if (useLLMCheckBox.isSelected()) {
+            if (toggleLLM.isSelected()) {
                 float[] queryVector = callPythonEmbeddingService(query);
-                List<ProductWithEmbedding> matches = EmbeddingSearchService.searchByVector(queryVector, allEmbeddedProducts, 12);
+
+                // Danh sách danh mục có thể phát hiện từ truy vấn
+                List<String> knownCategories = Arrays.asList("Tủ lạnh", "Máy giặt", "Tivi", "Điều hòa");
+
+                // Tìm danh mục nào xuất hiện trong truy vấn
+                String matchedCategory = knownCategories.stream()
+                        .filter(cat -> query.toLowerCase().contains(cat.toLowerCase()))
+                        .findFirst()
+                        .orElse(null); // không có thì không ưu tiên gì
+
+                // Gọi hàm tìm kiếm nâng cao RAG
+                List<ProductWithEmbedding> matches = EmbeddingSearchService.searchByVector(
+                        queryVector, query, allEmbeddedProducts, 0.4, matchedCategory
+                );
+
+                // Lấy toàn bộ kết quả hợp lệ
                 currentResults = matches.stream()
-                        .map(p -> new Product(
-                                p.getTenSanPham(),
-                                p.getAnh(),
-                                p.getGia(),
-                                p.getMoTaSanPham(),
-                                p.getDiemDanhGiaTrungBinh(),
-                                p.getSoLuotDanhGia(),
-                                p.getNguonDuLieu(),
-                                p.getLoaiSanPham()
-                        )).collect(Collectors.toList());
-            } else {
-                currentResults = searchService.searchProducts(query);
+                        .map(ProductWithEmbedding::toProduct)
+                        .collect(Collectors.toList());
             }
+
             currentPage = 1;
             updatePage();
         };
@@ -199,7 +207,7 @@ public class ProductSearchApp extends Application {
     public static float[] callPythonEmbeddingService(String query) {
         try {
             ProcessBuilder pb = new ProcessBuilder(
-                    "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+                    "C:/Users/Dell/AppData/Local/Programs/Python/Python310/python.exe",
                     "embed_query.py",
                     query
             );
