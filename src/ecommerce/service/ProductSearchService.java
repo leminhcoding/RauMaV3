@@ -1,6 +1,7 @@
 package ecommerce.service;
 
 import ecommerce.model.Product;
+import ecommerce.util.ProductParser;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -45,7 +46,7 @@ public class ProductSearchService {
             }
 
             if (name.isEmpty()) {
-                product.inferNameFromDescription();
+                ProductParser.inferNameFromDescription(product);
             }
 
             products.add(product);
@@ -74,12 +75,12 @@ public class ProductSearchService {
 
             if (query.contains("dưới") || query.contains("nhỏ hơn") || query.contains("it hon")) {
                 int priceLimit = extractPriceFromQuery(query, "dưới", "nhỏ hơn", "it hon");
-                if (priceLimit > 0 && product.parsePrice() <= priceLimit) score += 3;
+                if (priceLimit > 0 && ProductParser.parsePrice(product.getPrice()) <= priceLimit) score += 3;
             }
 
             if (query.contains("trên") || query.contains("lớn hơn") || query.contains("lon hon")) {
                 int priceLimit = extractPriceFromQuery(query, "trên", "lớn hơn", "lon hon");
-                if (priceLimit > 0 && product.parsePrice() >= priceLimit) score += 3;
+                if (priceLimit > 0 && ProductParser.parsePrice(product.getPrice()) >= priceLimit) score += 3;
             }
 
             if (query.contains("người") || query.contains("nguoi")) {

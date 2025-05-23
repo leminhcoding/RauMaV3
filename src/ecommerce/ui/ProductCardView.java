@@ -49,11 +49,11 @@ public class ProductCardView extends VBox {
         rating.setStyle("-fx-text-fill: #f1c40f; -fx-font-weight: bold;");
 
         // Giá
-        Label price = new Label(ProductSearchService.formatPriceVietnamese(p.parsePrice()));
+        Label price = new Label(ProductSearchService.formatPriceVietnamese(ecommerce.util.ProductParser.parsePrice(p.getPrice())));
         price.getStyleClass().add("product-price");
 
         // Mô tả nhanh
-        String shortDesc = p.extractKeyInfo();
+        String shortDesc = ecommerce.util.ProductParser.extractKeyInfo(p);
         if (shortDesc.isEmpty()) shortDesc = p.getDescription(); // fallback nếu không extract được
         Label desc = new Label(shortDesc);
         desc.setWrapText(true);

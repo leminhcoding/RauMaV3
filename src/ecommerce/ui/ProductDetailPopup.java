@@ -38,7 +38,7 @@ public class ProductDetailPopup {
         Label name = new Label(p.getName());
         name.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
 
-        Label price = new Label(ProductSearchService.formatPriceVietnamese(p.parsePrice()));
+        Label price = new Label(ProductSearchService.formatPriceVietnamese(ecommerce.util.ProductParser.parsePrice(p.getPrice())));
         price.setStyle("-fx-font-size: 18px; -fx-text-fill: red; -fx-font-weight: bold;");
 
         Label rating = new Label("★ " + p.getRating() + " (" + p.getRatingCount() + ")");
@@ -53,7 +53,7 @@ public class ProductDetailPopup {
         specsGrid.setHgap(20);
         specsGrid.setPadding(new Insets(10));
 
-        Specification[] specs = p.extractSpecifications();
+        Specification[] specs = ecommerce.util.ProductParser.extractSpecifications(p);
         for (int i = 0; i < specs.length; i++) {
             Label label = new Label(specs[i].getLabel() + ":");
             label.setStyle("-fx-font-weight: bold;");
