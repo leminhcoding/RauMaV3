@@ -2,7 +2,16 @@ package com.ecommerce.service;
 
 import com.ecommerce.model.Product;
 import com.ecommerce.model.ProductWithEmbedding;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -98,5 +107,67 @@ public class EmbeddingSearchService {
                 .limit(limit)
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
+    }
+    public static List<Product> searchViaFaiss(float[] queryEmbedding, int topK) {
+        try {
+            URL url = new URL("http://127.0.0.1:5000/search");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+
+            String json = "{\"query\": " + Arrays.toString(queryEmbedding) + ", \"top_k\": " + topK + "}";
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(json.getBytes(StandardCharsets.UTF_8));
+            }
+
+            StringBuilder response = new StringBuilder();
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    response.append(line);
+                }
+            }
+
+            // Chuyển kết quả JSON thành list Product
+            Gson gson = new Gson();
+            Type listType = new TypeToken<List<Product>>() {}.getType();
+            return gson.fromJson(response.toString(), listType);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+    public static List<ProductWithEmbedding> getTopFromFaiss(float[] queryEmbedding, int topK, List<ProductWithEmbedding> allProducts) {
+        List<ProductWithEmbedding> result = new ArrayList<>();
+        try {
+            // Gửi query đến Python server
+            URL url = new URL("http://localhost:5000/search");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+
+            String json = "{\"query\": " + Arrays.toString(queryEmbedding) + ", \"top_k\": " + topK + "}";
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(json.getBytes(StandardCharsets.UTF_8));
+            }
+
+            StringBuilder response = new StringBuilder();
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                String line;
+                while ((line = br.readLine()) != null) response.append(line);
+            }
+
+            // Parse lại đúng với ProductWithEmbedding
+            Gson gson = new Gson();
+            Type listType = new TypeToken<List<ProductWithEmbedding>>() {}.getType();
+            result = gson.fromJson(response.toString(), listType);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return result;
     }
 }

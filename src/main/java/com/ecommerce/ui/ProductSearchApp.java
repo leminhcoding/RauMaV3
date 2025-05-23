@@ -39,6 +39,7 @@ public class ProductSearchApp extends Application {
 
     @Override
     public void start(Stage stage) {
+        startFaissServer();
         searchService = new ProductSearchService();
         try {
             Path path = Paths.get(System.getProperty("user.dir"), "src", "main", "resources", "product_texts.json");
@@ -149,11 +150,17 @@ public class ProductSearchApp extends Application {
                                 .findFirst()
                                 .orElse(null);
 
+                        // 🔁 GỌI FAISS để lấy trước top 50 gần nhất (lọc sơ)
+                        List<ProductWithEmbedding> faissTop = EmbeddingSearchService.getTopFromFaiss(queryVector, 50, allEmbeddedProducts);
+
+                        // 🔁 Sau đó rerank bằng metadata như cũ
                         List<ProductWithEmbedding> matches = EmbeddingSearchService.searchByVector(
-                                queryVector, query, allEmbeddedProducts, 0.4, matchedCategory
+                                queryVector, query, faissTop, 0.4, matchedCategory
                         );
+
                         result = matches.stream().map(ProductWithEmbedding::toProduct).collect(Collectors.toList());
-                    } else {
+                    }
+                    else {
                         result = searchService.searchProducts(query);
                     }
 
@@ -268,14 +275,18 @@ public class ProductSearchApp extends Application {
         Button prev = new Button("Previous page");
         prev.getStyleClass().add("pagination-button");
         prev.setDisable(currentPage == 1);
+        prev.applyCss();
+        prev.layout();
         prev.setOnAction(e -> {
             currentPage--;
             updatePage();
         });
 
         Button next = new Button("Next page");
-        prev.getStyleClass().add("pagination-button");
+        next.getStyleClass().add("pagination-button");
         next.setDisable(currentPage == totalPages);
+        next.applyCss();
+        next.layout();
         next.setOnAction(e -> {
             currentPage++;
             updatePage();
@@ -293,6 +304,32 @@ public class ProductSearchApp extends Application {
             return rating * Math.log10(1 + count);
         } catch (Exception e) {
             return 0;
+        }
+    }
+    private void startFaissServer() {
+        try {
+            ProcessBuilder pb = new ProcessBuilder(
+                    "C:/Users/Dell/IdeaProjects/RauMaV3/.venv/Scripts/python.exe", "faiss_server.py"  // đường dẫn Python + script
+            );
+            pb.redirectErrorStream(true); // gộp stderr vào stdout
+
+            Process process = pb.start(); // khởi động tiến trình
+
+            // In log từ FAISS server (tùy chọn)
+            new Thread(() -> {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        System.out.println("[FAISS] " + line);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("❌ Không thể khởi động FAISS server.");
         }
     }
 }

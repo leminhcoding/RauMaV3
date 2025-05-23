@@ -185,7 +185,29 @@
      -fx-text-fill: #777;
  }
 .pagination-button {
-    -fx-background-color: #ecf0f1;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #ccc;
     -fx-border-radius: 10;
-    -fx-padding: 5 15;
+    -fx-background-radius: 10;
+    -fx-padding: 6 16;
+    -fx-text-fill: #333;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 2, 0, 0, 1);
+    -fx-font-weight: bold;
 }
+
+.pagination-button:hover {
+    -fx-background-color: #f0f0f0;
+    -fx-border-color: #999;
+}
+
+.pagination-button:disabled {
+    -fx-background-color: #f4f4f4;
+    -fx-text-fill: #aaa;
+    -fx-border-color: #ddd;
+    -fx-cursor: default;
+    -fx-opacity: 1.0;
+}
+
+
