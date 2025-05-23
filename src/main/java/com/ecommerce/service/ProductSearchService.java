@@ -6,7 +6,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 
@@ -19,7 +18,7 @@ public class ProductSearchService {
 
     public void loadProductsFromJson(String jsonFilePath) throws IOException, JSONException {
         products.clear();
-        String jsonContent = new String(Files.readAllBytes(Paths.get(jsonFilePath)), StandardCharsets.UTF_8);
+        String jsonContent = Files.readString(Paths.get(jsonFilePath));
         JSONArray jsonArray = new JSONArray(jsonContent);
 
         for (int i = 0; i < jsonArray.length(); i++) {
@@ -45,7 +44,7 @@ public class ProductSearchService {
                 product.setOldPrice(jsonProduct.getString("Giá cũ"));
             }
 
-            if (name.isEmpty() && !description.isEmpty()) {
+            if (name.isEmpty()) {
                 product.inferNameFromDescription();
             }
 

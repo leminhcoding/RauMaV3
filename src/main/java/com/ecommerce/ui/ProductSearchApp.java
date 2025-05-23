@@ -76,9 +76,10 @@ public class ProductSearchApp extends Application {
         sidebar.setStyle("-fx-background-color: #f0f0f0;");
         sidebar.setPrefWidth(180);
         sidebar.setAlignment(Pos.TOP_CENTER);
+        sidebar.getStyleClass().add("sidebar");
 
         Separator verticalSeparator = new Separator(Orientation.VERTICAL);
-        verticalSeparator.setPrefHeight(600);
+        verticalSeparator.setStyle("-fx-background-color: #ced6e0; -fx-pref-width: 1.5px;");
 
         TextField searchField = new TextField();
         searchField.setPromptText("VD: Tủ lạnh dưới 5 triệu, sản phẩm cho gia đình 5 người...");
@@ -91,6 +92,10 @@ public class ProductSearchApp extends Application {
         searchBox.setAlignment(Pos.CENTER_LEFT);
         searchBox.setPadding(new Insets(10));
         HBox.setHgrow(searchField, Priority.ALWAYS);
+        searchBox.getStyleClass().add("search-box");
+        searchBox.getStyleClass().add("search-bar-wrapper");
+        searchBox.getStyleClass().add("search-container");
+        searchField.getStyleClass().add("search-input");
 
         VBox topBar = new VBox(5, searchBox);
         topBar.setPadding(new Insets(0, 0, 10, 0));
@@ -116,6 +121,7 @@ public class ProductSearchApp extends Application {
 
         ScrollPane scrollPane = new ScrollPane(comContent);
         scrollPane.setFitToWidth(true);
+        scrollPane.getStyleClass().add("scroll-pane");
 
         BorderPane root = new BorderPane(scrollPane);
 
@@ -220,19 +226,8 @@ public class ProductSearchApp extends Application {
         searching = false;
 
         currentResults = searchService.getAllProducts().stream()
-                .sorted((p1, p2) -> {
-                    try {
-                        double r1 = Double.parseDouble(p1.getRating());
-                        double r2 = Double.parseDouble(p2.getRating());
-                        int v1 = Integer.parseInt(p1.getRatingCount().replaceAll("[^0-9]", ""));
-                        int v2 = Integer.parseInt(p2.getRatingCount().replaceAll("[^0-9]", ""));
-                        double score1 = r1 * Math.log10(1 + v1);
-                        double score2 = r2 * Math.log10(1 + v2);
-                        return Double.compare(score2, score1);
-                    } catch (Exception e) {
-                        return 0;
-                    }
-                })
+                .sorted((p1, p2) -> Double.compare(calculateProductScore(p2), calculateProductScore(p1)))
+
                 .collect(Collectors.toList());
 
         currentPage = 1;
@@ -244,19 +239,7 @@ public class ProductSearchApp extends Application {
         searching = false;
         currentResults = searchService.getAllProducts().stream()
                 .filter(p -> p.getProductType().equalsIgnoreCase(category))
-                .sorted((p1, p2) -> {
-                    try {
-                        double r1 = Double.parseDouble(p1.getRating());
-                        double r2 = Double.parseDouble(p2.getRating());
-                        int v1 = Integer.parseInt(p1.getRatingCount().replaceAll("[^0-9]", ""));
-                        int v2 = Integer.parseInt(p2.getRatingCount().replaceAll("[^0-9]", ""));
-                        double score1 = r1 * Math.log10(1 + v1);
-                        double score2 = r2 * Math.log10(1 + v2);
-                        return Double.compare(score2, score1);
-                    } catch (Exception e) {
-                        return 0;
-                    }
-                })
+                .sorted((p1, p2) -> Double.compare(calculateProductScore(p2), calculateProductScore(p1)))
                 .collect(Collectors.toList());
         currentPage = 1;
         updatePage();
@@ -302,5 +285,14 @@ public class ProductSearchApp extends Application {
 
         pagination.getChildren().addAll(prev, pageInfo, next);
         paginationBox.getChildren().add(pagination);
+    }
+    private double calculateProductScore(Product p) {
+        try {
+            double rating = Double.parseDouble(p.getRating());
+            int count = Integer.parseInt(p.getRatingCount().replaceAll("[^0-9]", ""));
+            return rating * Math.log10(1 + count);
+        } catch (Exception e) {
+            return 0;
+        }
     }
 }

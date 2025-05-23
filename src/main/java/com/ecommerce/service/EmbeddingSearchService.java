@@ -37,6 +37,24 @@ public class EmbeddingSearchService {
                 if (p.getTenSanPham() != null && p.getTenSanPham().toLowerCase().contains(queryLower)) {
                     score += 0.2;  // bonus nếu tên khớp từ khoá
                 }
+                if (p.getRating() >= 4.5) {
+                    score += 0.05; // ⭐ Ưu tiên sản phẩm có rating cao
+                }
+                if (p.getReviewCount() >= 100) {
+                    score += 0.03; // 🗳️ Ưu tiên sản phẩm có nhiều đánh giá
+                }
+
+                int gia;
+                try {
+                    gia = Integer.parseInt(p.getGia().replaceAll("\\D", "")); // loại bỏ mọi ký tự không phải số
+                } catch (NumberFormatException e) {
+                    gia = Integer.MAX_VALUE; // nếu lỗi thì gán giá rất cao để không được chọn
+                }
+
+                if (queryLower.contains("giá rẻ") && gia < 5000000) {
+                    score += 0.04; // 💸 Ưu tiên nếu người dùng muốn giá rẻ và giá < 5 triệu
+                }
+
                 scored.add(new AbstractMap.SimpleEntry<>(p, score));
             }
         }
@@ -68,7 +86,7 @@ public class EmbeddingSearchService {
         for (ProductWithEmbedding item : allProducts) {
             double sim = cosineSimilarity(queryEmbedding, item.getEmbedding());
 
-            if (sim >= 0.4) {  // ✅ lọc ngưỡng cosine ≥ 0.6
+            if (sim >= 0.4) {  // ✅ lọc ngưỡng cosine ≥ 0.4
                 scored.add(new AbstractMap.SimpleEntry<>(item.toProduct(), sim));
             }
         }

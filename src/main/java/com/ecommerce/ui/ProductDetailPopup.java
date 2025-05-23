@@ -39,10 +39,10 @@ public class ProductDetailPopup {
         name.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
 
         Label price = new Label(ProductSearchService.formatPriceVietnamese(p.parsePrice()));
-        price.setStyle("-fx-font-size: 18px; -fx-text-fill: red;");
+        price.setStyle("-fx-font-size: 18px; -fx-text-fill: red; -fx-font-weight: bold;");
 
         Label rating = new Label("★ " + p.getRating() + " (" + p.getRatingCount() + ")");
-        rating.setStyle("-fx-text-fill: #f1c40f;");
+        rating.setStyle("-fx-text-fill: #f1c40f; -fx-font-weight: bold;");
 
         // Thông số kỹ thuật
         Label specsTitle = new Label("Thông số kỹ thuật:");

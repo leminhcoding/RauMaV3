@@ -5,7 +5,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -15,7 +14,7 @@ public class ProductRepository {
     public static List<Product> loadProducts(String path) {
         List<Product> products = new ArrayList<>();
         try {
-            String content = new String(Files.readAllBytes(Paths.get(path)), StandardCharsets.UTF_8);
+            String content = Files.readString(Paths.get(path));
             JSONArray array = new JSONArray(content);
             for (int i = 0; i < array.length(); i++) {
                 JSONObject obj = array.getJSONObject(i);
