@@ -1,7 +1,7 @@
-package com.ecommerce.ui;
+package ecommerce.ui;
 
-import com.ecommerce.model.Product;
-import com.ecommerce.service.ProductSearchService;
+import ecommerce.model.Product;
+import ecommerce.service.ProductSearchService;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;

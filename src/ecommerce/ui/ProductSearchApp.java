@@ -1,10 +1,10 @@
-package com.ecommerce.ui;
+package ecommerce.ui;
 
 import javafx.geometry.Orientation;
-import com.ecommerce.model.Product;
-import com.ecommerce.model.ProductWithEmbedding;
-import com.ecommerce.service.EmbeddingSearchService;
-import com.ecommerce.service.ProductSearchService;
+import ecommerce.model.Product;
+import ecommerce.model.ProductWithEmbedding;
+import ecommerce.service.EmbeddingSearchService;
+import ecommerce.service.ProductSearchService;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import javafx.application.Application;
@@ -41,16 +41,16 @@ public class ProductSearchApp extends Application {
     public void start(Stage stage) {
         searchService = new ProductSearchService();
         try {
-            Path path = Paths.get(System.getProperty("user.dir"), "src", "main", "resources", "product_texts.json");
+            Path path = Paths.get(System.getProperty("user.dir"), "src", "resources", "product_texts.json");
             searchService.loadProductsFromJson(path.toString());
-            allEmbeddedProducts = loadEmbeddedProducts("src/main/resources/embedded_products.json");
+            allEmbeddedProducts = loadEmbeddedProducts("src/resources/embedded_products.json");
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println("❌ Không thể tải dữ liệu sản phẩm hoặc embedding.");
             return;
         }
 
-        ImageView logoView = new ImageView("file:src/main/resources/logo.png");
+        ImageView logoView = new ImageView("file:src/resources/logo.png");
         logoView.setFitWidth(120);
         logoView.setPreserveRatio(true);
         VBox logoBox = new VBox(logoView);
@@ -126,7 +126,7 @@ public class ProductSearchApp extends Application {
         BorderPane root = new BorderPane(scrollPane);
 
         Scene scene = new Scene(root, 1200, 850);
-        scene.getStylesheets().add("file:src/main/resources/style.css");
+        scene.getStylesheets().add("file:src/resources/style.css");
         stage.setScene(scene);
         stage.setTitle("Tìm kiếm sản phẩm");
         stage.show();

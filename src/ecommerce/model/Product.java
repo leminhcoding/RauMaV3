@@ -1,4 +1,4 @@
-package com.ecommerce.model;
+package ecommerce.model;
 
 import org.json.JSONObject;
 import java.util.ArrayList;

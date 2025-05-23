@@ -1,6 +1,6 @@
-package com.ecommerce.service;
+package ecommerce.service;
 
-import com.ecommerce.model.Product;
+import ecommerce.model.Product;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

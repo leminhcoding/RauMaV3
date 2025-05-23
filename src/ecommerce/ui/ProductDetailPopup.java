@@ -1,8 +1,8 @@
-package com.ecommerce.ui;
+package ecommerce.ui;
 
-import com.ecommerce.model.Product;
-import com.ecommerce.model.Specification;
-import com.ecommerce.service.ProductSearchService;
+import ecommerce.model.Product;
+import ecommerce.model.Specification;
+import ecommerce.service.ProductSearchService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;

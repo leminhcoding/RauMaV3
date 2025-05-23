@@ -1,7 +1,7 @@
-package com.ecommerce.service;
+package ecommerce.service;
 
-import com.ecommerce.model.Product;
-import com.ecommerce.model.ProductWithEmbedding;
+import ecommerce.model.Product;
+import ecommerce.model.ProductWithEmbedding;
 
 import java.util.*;
 import java.util.stream.Collectors;
