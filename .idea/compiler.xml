@@ -6,8 +6,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="product-search" />
+        <module name="ProductSearchApp" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="product-search" target="11" />
+    </bytecodeTargetLevel>
   </component>
 </project>

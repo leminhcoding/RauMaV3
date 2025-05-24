@@ -1,43 +1,61 @@
 package ecommerce.service;
 
+import ecommerce.model.Product;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 public class EmbeddingClient {
 
-    public static float[] getEmbedding(String query) {
-        try {
-            ProcessBuilder pb = new ProcessBuilder(
-                    "C:/Users/Dell/AppData/Local/Programs/Python/Python310/python.exe",
-                    "embed_query.py",
-                    query
-            );
-            pb.redirectErrorStream(true);
-            Process process = pb.start();
+    public static List<Product> searchSemantic(String query) {
+        List<Product> results = new ArrayList<>();
 
-            StringBuilder output = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    output.append(line).append("\n");
+        try {
+            URL url = new URL("http://localhost:8000/embed");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json; utf-8");
+            conn.setDoOutput(true);
+
+            // Gửi JSON query
+            String jsonInput = "{\"query\": \"" + query + "\"}";
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonInput.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+
+            // Đọc kết quả trả về
+            StringBuilder response = new StringBuilder();
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"))) {
+                String responseLine;
+                while ((responseLine = br.readLine()) != null) {
+                    response.append(responseLine.trim());
                 }
             }
 
-            if (output.toString().contains("Traceback")) {
-                System.err.println("❌ Python script error:\n" + output);
-                return new float[0];
+            JSONObject jsonResponse = new JSONObject(response.toString());
+            JSONArray metadatas = jsonResponse.getJSONArray("metadatas");
+
+            for (int i = 0; i < metadatas.length(); i++) {
+                JSONArray inner = metadatas.getJSONArray(i);
+                for (int j = 0; j < inner.length(); j++) {
+                    JSONObject jsonProduct = inner.getJSONObject(j);
+                    Product p = Product.fromJson(jsonProduct);
+                    results.add(p);
+                }
             }
 
-            String[] parts = output.toString().trim().replace("[", "").replace("]", "").split(",");
-            float[] vector = new float[parts.length];
-            for (int i = 0; i < parts.length; i++) {
-                vector[i] = Float.parseFloat(parts[i].trim());
-            }
-
-            return vector;
         } catch (Exception e) {
             e.printStackTrace();
-            return new float[0];
         }
+
+        return results;
     }
 }

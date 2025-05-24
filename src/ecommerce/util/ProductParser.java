@@ -111,12 +111,4 @@ public class ProductParser {
             product.setName(sb.toString());
         }
     }
-
-    public static boolean isFeatured(Product product) {
-        try {
-            return Float.parseFloat(product.getRating()) >= 4.8;
-        } catch (Exception e) {
-            return false;
-        }
-    }
 }

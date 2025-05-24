@@ -17,6 +17,9 @@ public class EmbeddingSearchService {
         }
         return dot / (Math.sqrt(normA) * Math.sqrt(normB));
     }
+    public List<Product> search(String query) {
+        return EmbeddingClient.searchSemantic(query);
+    }
 
     // Dùng để lấy top K gần nhất (tùy chọn)
     public static List<ProductWithEmbedding> searchByVector(

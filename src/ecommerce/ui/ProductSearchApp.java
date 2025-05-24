@@ -2,12 +2,9 @@ package ecommerce.ui;
 
 import javafx.geometry.Orientation;
 import ecommerce.model.Product;
-import ecommerce.model.ProductWithEmbedding;
 import ecommerce.service.ProductSearchService;
 import ecommerce.service.ProductScorer;
 import ecommerce.service.SearchHandlerService;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import javafx.application.Application;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
@@ -18,8 +15,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
-import java.io.*;
-import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -34,23 +29,21 @@ public class ProductSearchApp extends Application {
     private VBox paginationBox;
     private boolean isShowingHot = false;
     private boolean searching = false;
-    private List<ProductWithEmbedding> allEmbeddedProducts = new ArrayList<>();
     private Label loadingLabel = new Label("🔎 Đang tìm kiếm, vui lòng chờ...");
 
     @Override
     public void start(Stage stage) {
         searchService = new ProductSearchService();
         try {
-            Path path = Paths.get(System.getProperty("user.dir"), "src", "resources", "product_texts.json");
+            Path path = Paths.get(System.getProperty("user.dir"),  "resources", "product_texts.json");
             searchService.loadProductsFromJson(path.toString());
-            allEmbeddedProducts = loadEmbeddedProducts("src/resources/embedded_products.json");
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println("❌ Không thể tải dữ liệu sản phẩm hoặc embedding.");
             return;
         }
 
-        ImageView logoView = new ImageView("file:src/resources/logo.png");
+        ImageView logoView = new ImageView("file:resources/logo.png");
         logoView.setFitWidth(120);
         logoView.setPreserveRatio(true);
         VBox logoBox = new VBox(logoView);
@@ -126,7 +119,7 @@ public class ProductSearchApp extends Application {
         BorderPane root = new BorderPane(scrollPane);
 
         Scene scene = new Scene(root, 1200, 850);
-        scene.getStylesheets().add("file:src/resources/style.css");
+        scene.getStylesheets().add("file:resources/style.css");
         stage.setScene(scene);
         stage.setTitle("Tìm kiếm sản phẩm");
         stage.show();
@@ -140,7 +133,7 @@ public class ProductSearchApp extends Application {
             Task<Void> searchTask = SearchHandlerService.createSearchTask(
                     query,
                     toggleLLM.isSelected(),
-                    allEmbeddedProducts,
+                    searchService.getAllProducts(),
                     Arrays.asList("Tủ lạnh", "Máy giặt", "Tivi", "Điều hòa"),
                     searchService,
                     result -> {
@@ -156,17 +149,6 @@ public class ProductSearchApp extends Application {
         searchField.setOnAction(e -> searchHandler.run());
         searchButton.setOnAction(e -> searchHandler.run());
         showFeaturedProducts();
-    }
-
-    public static List<ProductWithEmbedding> loadEmbeddedProducts(String filePath) {
-        try (Reader reader = new FileReader(filePath)) {
-            Gson gson = new Gson();
-            Type listType = new TypeToken<List<ProductWithEmbedding>>() {}.getType();
-            return gson.fromJson(reader, listType);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return new ArrayList<>();
-        }
     }
 
     private void showFeaturedProducts() {

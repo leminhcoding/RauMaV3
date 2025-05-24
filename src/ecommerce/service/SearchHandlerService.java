@@ -1,20 +1,18 @@
 package ecommerce.service;
 
 import ecommerce.model.Product;
-import ecommerce.model.ProductWithEmbedding;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 
-import java.util.*;
+import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class SearchHandlerService {
 
     public static Task<Void> createSearchTask(
             String query,
             boolean useLLM,
-            List<ProductWithEmbedding> allEmbeddedProducts,
+            List<Product> allProducts,
             List<String> knownCategories,
             ProductSearchService searchService,
             Consumer<List<Product>> callback
@@ -25,16 +23,8 @@ public class SearchHandlerService {
                 List<Product> result;
 
                 if (useLLM) {
-                    float[] queryVector = EmbeddingClient.getEmbedding(query);
-                    String matchedCategory = knownCategories.stream()
-                            .filter(cat -> query.toLowerCase().contains(cat.toLowerCase()))
-                            .findFirst()
-                            .orElse(null);
-
-                    List<ProductWithEmbedding> matches = EmbeddingSearchService.searchByVector(
-                            queryVector, query, allEmbeddedProducts, 0.4, matchedCategory
-                    );
-                    result = matches.stream().map(ProductWithEmbedding::toProduct).collect(Collectors.toList());
+                    // Dùng ChromaDB qua Flask API
+                    result = EmbeddingClient.searchSemantic(query);
                 } else {
                     result = searchService.searchProducts(query);
                 }

@@ -1,9 +1,6 @@
 package ecommerce.model;
 
 import org.json.JSONObject;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.*;
 
 public class Product {
     private String name;
@@ -34,8 +31,8 @@ public class Product {
                 json.optString("Ảnh"),
                 json.optString("Giá"),
                 json.optString("Mô tả sản phẩm"),
-                json.optString("Đánh giá"),
-                json.optString("Số lượng đánh giá"),
+                json.optString("Điểm đánh giá trung bình"),
+                json.optString("Số lượt đánh giá"),
                 json.optString("Nguồn"),
                 json.optString("Loại sản phẩm")
         );
@@ -51,7 +48,6 @@ public class Product {
     public String getPrice() { return price; }
     public void setPrice(String price) { this.price = price; }
 
-    public String getOldPrice() { return oldPrice; }
     public void setOldPrice(String oldPrice) { this.oldPrice = oldPrice; }
 
     public String getDescription() { return description; }
@@ -61,11 +57,9 @@ public class Product {
     public void setRating(String rating) { this.rating = rating; }
 
     public String getRatingCount() { return ratingCount; }
-    public void setRatingCount(String ratingCount) { this.ratingCount = ratingCount; }
 
     public String getSource() { return source; }
     public void setSource(String source) { this.source = source; }
 
     public String getProductType() { return productType; }
-    public void setProductType(String productType) { this.productType = productType; }
 }
