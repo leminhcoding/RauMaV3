@@ -1,11 +1,14 @@
 // ✅ Giao diện JavaFX mới với accordion danh mục phụ và lọc giá
 package ecommerce.ui;
 
+import ecommerce.service.GeminiChatClient;
+import javafx.application.Platform;
 import javafx.geometry.Orientation;
 import ecommerce.model.Product;
 import ecommerce.service.ProductSearchService;
 import ecommerce.service.ProductScorer;
 import ecommerce.service.SearchHandlerService;
+import ecommerce.logic.SmartSuggestionEngine;
 import javafx.application.Application;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
@@ -136,12 +139,71 @@ public class ProductSearchApp extends Application {
         ScrollPane scrollPane = new ScrollPane(comContent);
         scrollPane.setFitToWidth(true);
 
-        BorderPane root = new BorderPane(scrollPane);
-        Scene scene = new Scene(root, 1200, 850);
+        BorderPane mainLayout = new BorderPane(scrollPane);
+
+// Tạo chatbot thu nhỏ ở góc dưới bên phải
+        VBox chatPane = new VBox(8);
+        chatPane.setPadding(new Insets(10));
+        chatPane.setStyle("-fx-background-color: #ffffff; -fx-border-color: #ccc; -fx-border-radius: 10; -fx-background-radius: 10;");
+        chatPane.setPrefSize(300, 220);
+
+        Label chatLabel = new Label("🤖 Chat với trợ lý sản phẩm");
+        TextArea chatArea = new TextArea();
+        chatArea.setWrapText(true);
+        chatArea.setEditable(false);
+        chatArea.setPrefHeight(120);
+
+        HBox inputBox = new HBox(5);
+        TextField inputField = new TextField();
+        inputField.setPromptText("Nhập câu hỏi...");
+        Button sendBtn = new Button("Gửi");
+        inputBox.getChildren().addAll(inputField, sendBtn);
+        HBox.setHgrow(inputField, Priority.ALWAYS);
+
+        chatPane.getChildren().addAll(chatLabel, chatArea, inputBox);
+
+// Đặt chatPane vào góc phải dưới
+        AnchorPane floatingChat = new AnchorPane(chatPane);
+        floatingChat.setPickOnBounds(false);
+
+        chatPane.setMouseTransparent(false);
+        AnchorPane.setRightAnchor(chatPane, 20.0);
+        AnchorPane.setBottomAnchor(chatPane, 20.0);
+
+// Dùng StackPane bao tất cả
+        StackPane root = new StackPane();
+        root.getChildren().addAll(mainLayout, floatingChat);
+        Scene scene = new Scene(root, 1200, 850);  // ✅ root là StackPane bạn đã tạo ở trên
         scene.getStylesheets().add("file:resources/style.css");
         stage.setScene(scene);
         stage.setTitle("Tìm kiếm sản phẩm");
         stage.show();
+
+        sendBtn.setOnAction(e -> {
+            String userText = inputField.getText().trim();
+            if (!userText.isEmpty()) {
+                chatArea.appendText("Bạn: " + userText + "\n");
+                inputField.clear();
+
+                new Thread(() -> {
+                    String reply = GeminiChatClient.sendPrompt(userText);
+                    List<Product> suggestions = SmartSuggestionEngine.suggest(userText, searchService);
+
+                    Platform.runLater(() -> {
+                        chatArea.appendText("Bot: " + reply + "\n\n");
+                        if (!suggestions.isEmpty()) {
+                            chatArea.appendText("✅ Gợi ý sản phẩm:\n");
+                            for (Product p : suggestions) {
+                                chatArea.appendText("• " + p.getName() + " - " + p.getPrice() + "\n");
+                            }
+                            currentResults = suggestions;
+                            currentPage = 1;
+                            updatePage();
+                        }
+                    });
+                }).start();
+            }
+        });
 
         Runnable searchHandler = () -> {
             isShowingHot = false;
