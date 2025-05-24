@@ -3,12 +3,12 @@ package ecommerce.ui;
 import javafx.geometry.Orientation;
 import ecommerce.model.Product;
 import ecommerce.model.ProductWithEmbedding;
-import ecommerce.service.EmbeddingSearchService;
 import ecommerce.service.ProductSearchService;
+import ecommerce.service.ProductScorer;
+import ecommerce.service.SearchHandlerService;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -137,35 +137,19 @@ public class ProductSearchApp extends Application {
             String query = searchField.getText();
             loadingLabel.setVisible(true);
 
-            Task<Void> searchTask = new Task<>() {
-                @Override
-                protected Void call() {
-                    List<Product> result;
-                    if (toggleLLM.isSelected()) {
-                        float[] queryVector = callPythonEmbeddingService(query);
-                        List<String> knownCategories = Arrays.asList("Tủ lạnh", "Máy giặt", "Tivi", "Điều hòa");
-                        String matchedCategory = knownCategories.stream()
-                                .filter(cat -> query.toLowerCase().contains(cat.toLowerCase()))
-                                .findFirst()
-                                .orElse(null);
-
-                        List<ProductWithEmbedding> matches = EmbeddingSearchService.searchByVector(
-                                queryVector, query, allEmbeddedProducts, 0.4, matchedCategory
-                        );
-                        result = matches.stream().map(ProductWithEmbedding::toProduct).collect(Collectors.toList());
-                    } else {
-                        result = searchService.searchProducts(query);
-                    }
-
-                    Platform.runLater(() -> {
+            Task<Void> searchTask = SearchHandlerService.createSearchTask(
+                    query,
+                    toggleLLM.isSelected(),
+                    allEmbeddedProducts,
+                    Arrays.asList("Tủ lạnh", "Máy giặt", "Tivi", "Điều hòa"),
+                    searchService,
+                    result -> {
                         currentResults = result;
                         currentPage = 1;
                         updatePage();
                         loadingLabel.setVisible(false);
-                    });
-                    return null;
-                }
-            };
+                    }
+            );
             new Thread(searchTask).start();
         };
 
@@ -185,49 +169,12 @@ public class ProductSearchApp extends Application {
         }
     }
 
-    public static float[] callPythonEmbeddingService(String query) {
-        try {
-            ProcessBuilder pb = new ProcessBuilder(
-                    "C:/Users/Dell/AppData/Local/Programs/Python/Python310/python.exe",
-                    "embed_query.py",
-                    query
-            );
-            pb.redirectErrorStream(true);
-            Process process = pb.start();
-
-            StringBuilder output = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    output.append(line).append("\n");
-                }
-            }
-
-            if (output.toString().contains("Traceback")) {
-                System.err.println("❌ Python script error:\n" + output);
-                return new float[0];
-            }
-
-            String[] parts = output.toString().trim().replace("[", "").replace("]", "").split(",");
-            float[] vector = new float[parts.length];
-            for (int i = 0; i < parts.length; i++) {
-                vector[i] = Float.parseFloat(parts[i].trim());
-            }
-            return vector;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new float[0];
-        }
-    }
-
     private void showFeaturedProducts() {
         isShowingHot = false;
         searching = false;
 
         currentResults = searchService.getAllProducts().stream()
-                .sorted((p1, p2) -> Double.compare(calculateProductScore(p2), calculateProductScore(p1)))
-
+                .sorted((p1, p2) -> Double.compare(ProductScorer.calculateScore(p2), ProductScorer.calculateScore(p1)))
                 .collect(Collectors.toList());
 
         currentPage = 1;
@@ -239,31 +186,35 @@ public class ProductSearchApp extends Application {
         searching = false;
         currentResults = searchService.getAllProducts().stream()
                 .filter(p -> p.getProductType().equalsIgnoreCase(category))
-                .sorted((p1, p2) -> Double.compare(calculateProductScore(p2), calculateProductScore(p1)))
+                .sorted((p1, p2) -> Double.compare(ProductScorer.calculateScore(p2), ProductScorer.calculateScore(p1)))
                 .collect(Collectors.toList());
         currentPage = 1;
         updatePage();
     }
-
     private void updatePage() {
         productFlow.getChildren().clear();
         int totalPages = (int) Math.ceil((double) currentResults.size() / itemsPerPage);
         int from = (currentPage - 1) * itemsPerPage;
         int to = Math.min(from + itemsPerPage, currentResults.size());
 
+
         for (int i = from; i < to; i++) {
             Product p = currentResults.get(i);
+
 
             boolean isHot = isShowingHot && i < 3;
             boolean isFeatured = !isShowingHot && !searching && i < 12;
             boolean showBadge = isHot || isFeatured;
 
+
             productFlow.getChildren().add(new ProductCardView(p, isHot, showBadge));
         }
+
 
         paginationBox.getChildren().clear();
         HBox pagination = new HBox(10);
         pagination.setAlignment(Pos.CENTER);
+
 
         Button prev = new Button("Previous page");
         prev.getStyleClass().add("pagination-button");
@@ -273,6 +224,7 @@ public class ProductSearchApp extends Application {
             updatePage();
         });
 
+
         Button next = new Button("Next page");
         prev.getStyleClass().add("pagination-button");
         next.setDisable(currentPage == totalPages);
@@ -281,18 +233,12 @@ public class ProductSearchApp extends Application {
             updatePage();
         });
 
+
         Label pageInfo = new Label("Trang " + currentPage + " / " + totalPages);
+
 
         pagination.getChildren().addAll(prev, pageInfo, next);
         paginationBox.getChildren().add(pagination);
     }
-    private double calculateProductScore(Product p) {
-        try {
-            double rating = Double.parseDouble(p.getRating());
-            int count = Integer.parseInt(p.getRatingCount().replaceAll("[^0-9]", ""));
-            return rating * Math.log10(1 + count);
-        } catch (Exception e) {
-            return 0;
-        }
-    }
+
 }
