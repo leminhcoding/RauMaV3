@@ -189,3 +189,51 @@
     -fx-border-radius: 10;
     -fx-padding: 5 15;
 }
+/* ======= Nút danh mục phụ (subcategories) ======= */
+.subcategory-button {
+    -fx-background-color: #f6f6f6;
+    -fx-border-color: #ccc;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-font-size: 13px;
+    -fx-padding: 6 12;
+    -fx-text-fill: #333;
+    -fx-alignment: center-left;
+}
+
+.subcategory-button:hover {
+    -fx-background-color: #d6ebff;
+    -fx-cursor: hand;
+}
+
+/* ======= Accordion danh mục chính ======= */
+.titled-pane {
+    -fx-background-color: #f9f9f9;
+    -fx-border-color: #ccc;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 4;
+}
+
+.titled-pane > .title {
+    -fx-background-color: #dfefff;
+    -fx-padding: 8;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2e7dff;
+}
+
+.accordion .titled-pane > .content {
+    -fx-padding: 10 16;
+}
+
+/* ======= Checkbox lọc theo giá ======= */
+.price-checkbox {
+    -fx-font-size: 13px;
+    -fx-text-fill: #333;
+    -fx-padding: 4 8;
+}
+
+.price-checkbox:hover {
+    -fx-background-color: #f0faff;
+    -fx-cursor: hand;
+}
