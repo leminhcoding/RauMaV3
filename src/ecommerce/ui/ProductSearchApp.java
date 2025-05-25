@@ -115,7 +115,7 @@ public class ProductSearchApp extends Application {
             // 👉 Gắn sự kiện khi click checkbox
             cb.setOnAction(e -> {
                 if (searching) {
-                    currentResults = currentResults.stream()
+                    currentResults = searchService.getAllProducts().stream()
                             .filter(p -> currentCategory == null || p.getCategory().equalsIgnoreCase(currentCategory))
                             .filter(this::filterByPrice)
                             .sorted(Comparator.comparingDouble(ProductScorer::calculateScore).reversed())
@@ -232,6 +232,8 @@ public class ProductSearchApp extends Application {
                                 chatArea.appendText("• " + p.getName() + " - " + p.getPrice() + "\n");
                             }
                             currentResults = suggestions;
+                            searching = true; // 🔥 Phải bật lại trạng thái đang tìm
+                            currentCategory = null;
                             currentPage = 1;
                             updatePage();
                         }
@@ -253,7 +255,8 @@ public class ProductSearchApp extends Application {
                     new ArrayList<>(subCategories.keySet()),
                     searchService,
                     result -> {
-                        currentResults = currentResults.stream()
+                        currentCategory = null; // ✅ reset danh mục khi tìm kiếm mới
+                        currentResults = result.stream()
                                 .filter(p -> currentCategory == null || p.getCategory().equalsIgnoreCase(currentCategory))
                                 .filter(this::filterByPrice)
                                 .sorted(Comparator.comparingDouble(ProductScorer::calculateScore).reversed())
