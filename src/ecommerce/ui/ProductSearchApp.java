@@ -25,6 +25,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class ProductSearchApp extends Application {
+    private String currentCategory = null;
+    private TextField searchField;
+    private Runnable searchHandler;
     private ProductSearchService searchService;
     private FlowPane productFlow;
     private List<Product> currentResults = new ArrayList<>();
@@ -76,9 +79,25 @@ public class ProductSearchApp extends Application {
                 Button subBtn = new Button(sub);
                 subBtn.setMaxWidth(Double.MAX_VALUE);
                 subBtn.getStyleClass().add("subcategory-button");
+                subBtn.setOnAction(e -> {
+                    searchField.setText(sub); // hoặc searchField.setText(entry.getKey()); nếu muốn tìm theo danh mục chính
+                    currentCategory = entry.getKey();
+                    searchHandler.run();
+                });
                 subBox.getChildren().add(subBtn);
             }
-            accordion.getPanes().add(new TitledPane(entry.getKey(), subBox));
+            TitledPane titledPane = new TitledPane(entry.getKey(), subBox);
+
+// 👉 Gắn tìm kiếm khi double click vào danh mục lớn
+            titledPane.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2) {
+                    searchField.setText(entry.getKey());
+                    searchHandler.run();
+                }
+            });
+
+            accordion.getPanes().add(titledPane);
+
         }
         VBox categoryBox = new VBox(15, categoriesLabel, accordion);
         categoryBox.setAlignment(Pos.TOP_CENTER);
@@ -92,6 +111,22 @@ public class ProductSearchApp extends Application {
             cb.getStyleClass().add("price-checkbox");
             priceCheckBoxes.add(cb);
             priceBox.getChildren().add(cb);
+
+            // 👉 Gắn sự kiện khi click checkbox
+            cb.setOnAction(e -> {
+                if (searching) {
+                    currentResults = currentResults.stream()
+                            .filter(p -> currentCategory == null || p.getCategory().equalsIgnoreCase(currentCategory))
+                            .filter(this::filterByPrice)
+                            .sorted(Comparator.comparingDouble(ProductScorer::calculateScore).reversed())
+                            .collect(Collectors.toList());
+                    currentPage = 1;
+                    updatePage();
+                    searchHandler.run();
+                } else {
+                    showFeaturedProducts();
+                }
+            });
         }
 
         VBox sidebar = new VBox(logoBox, categoryBox, priceBox);
@@ -103,7 +138,7 @@ public class ProductSearchApp extends Application {
         Separator verticalSeparator = new Separator(Orientation.VERTICAL);
         verticalSeparator.setStyle("-fx-background-color: #ced6e0; -fx-pref-width: 1.5px;");
 
-        TextField searchField = new TextField();
+        searchField = new TextField();
         searchField.getStyleClass().add("search-input");
         searchField.setPromptText("VD: Tủ lạnh dưới 5 triệu, sản phẩm cho gia đình 5 người...");
         ToggleButton toggleLLM = new ToggleButton("Tìm kiếm nâng cao");
@@ -205,7 +240,7 @@ public class ProductSearchApp extends Application {
             }
         });
 
-        Runnable searchHandler = () -> {
+        searchHandler = () -> {
             isShowingHot = false;
             searching = true;
             String query = searchField.getText();
@@ -218,19 +253,22 @@ public class ProductSearchApp extends Application {
                     new ArrayList<>(subCategories.keySet()),
                     searchService,
                     result -> {
-                        List<Product> filtered = result.stream()
+                        currentResults = currentResults.stream()
+                                .filter(p -> currentCategory == null || p.getCategory().equalsIgnoreCase(currentCategory))
                                 .filter(this::filterByPrice)
                                 .sorted(Comparator.comparingDouble(ProductScorer::calculateScore).reversed())
                                 .collect(Collectors.toList());
-                        currentResults = filtered;
+
                         currentPage = 1;
                         updatePage();
                         loadingLabel.setVisible(false);
-                    });
+                    }
+            );
 
-            new Thread(searchTask).start();
+            new Thread(searchTask).start(); // ✅ đặt đúng chỗ
         };
 
+// ✅ đặt ngoài searchHandler
         searchField.setOnAction(e -> searchHandler.run());
         searchButton.setOnAction(e -> searchHandler.run());
         showFeaturedProducts();

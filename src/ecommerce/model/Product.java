@@ -12,9 +12,10 @@ public class Product {
     private String ratingCount;
     private String source;
     private String productType;
+    private String category;
 
     public Product(String name, String image, String price, String description,
-                   String rating, String ratingCount, String source, String productType) {
+                   String rating, String ratingCount, String source, String productType, String category) {
         this.name = name;
         this.image = image;
         this.price = price;
@@ -23,6 +24,7 @@ public class Product {
         this.ratingCount = ratingCount;
         this.source = source;
         this.productType = productType;
+        this.category = category;
     }
 
     public static Product fromJson(JSONObject json) {
@@ -34,6 +36,7 @@ public class Product {
                 json.optString("Điểm đánh giá trung bình"),
                 json.optString("Số lượt đánh giá"),
                 json.optString("Nguồn"),
+                json.optString("Loại sản phẩm"),
                 json.optString("Loại sản phẩm")
         );
     }
@@ -62,4 +65,7 @@ public class Product {
     public void setSource(String source) { this.source = source; }
 
     public String getProductType() { return productType; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 }

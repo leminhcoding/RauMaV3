@@ -92,6 +92,7 @@ public class ProductWithEmbedding {
                 diemDanhGiaTrungBinh,
                 soLuotDanhGia,
                 nguonDuLieu,
+                loaiSanPham,
                 loaiSanPham
         );
     }

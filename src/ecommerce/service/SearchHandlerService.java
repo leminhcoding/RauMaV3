@@ -23,7 +23,6 @@ public class SearchHandlerService {
                 List<Product> result;
 
                 if (useLLM) {
-                    // Dùng ChromaDB qua Flask API
                     result = EmbeddingClient.searchSemantic(query);
                 } else {
                     result = searchService.searchProducts(query);

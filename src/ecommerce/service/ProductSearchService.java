@@ -38,6 +38,7 @@ public class ProductSearchService {
                     jsonProduct.optString("Điểm đánh giá trung bình", "0"),
                     jsonProduct.optString("Số lượt đánh giá", "0 đánh giá"),
                     jsonProduct.optString("Nguồn dữ liệu", ""),
+                    jsonProduct.optString("Loại sản phẩm", ""),
                     jsonProduct.optString("Loại sản phẩm", "")
             );
 
