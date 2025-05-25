@@ -144,9 +144,6 @@ public class ProductSearchService {
         return new ArrayList<>(products);
     }
 
-    public static String formatPrice(long price) {
-        return String.format("%,d₫", price).replace(",", ".");
-    }
     public static String formatPriceVietnamese(long price) {
         java.text.NumberFormat format = java.text.NumberFormat.getInstance(new java.util.Locale("vi", "VN"));
         return format.format(price) + " ₫";
