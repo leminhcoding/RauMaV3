@@ -32,10 +32,6 @@ public class ProductWithEmbedding {
         return tenSanPham;
     }
 
-    public String getMoTaSanPham() {
-        return moTaSanPham;
-    }
-
     public String getAnh() {
         return anh;
     }
@@ -46,18 +42,6 @@ public class ProductWithEmbedding {
 
     public String getLoaiSanPham() {
         return loaiSanPham;
-    }
-
-    public String getDiemDanhGiaTrungBinh() {
-        return diemDanhGiaTrungBinh;
-    }
-
-    public String getSoLuotDanhGia() {
-        return soLuotDanhGia;
-    }
-
-    public String getNguonDuLieu() {
-        return nguonDuLieu;
     }
 
     public float[] getEmbedding() {
