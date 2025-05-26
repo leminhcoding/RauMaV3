@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  chromadb:
+    image: ghcr.io/chroma-core/chroma:latest
+    ports:
+      - "8001:8000"
+
+  flask:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - chromadb

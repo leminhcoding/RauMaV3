@@ -1,11 +1,20 @@
 from flask import Flask, request, jsonify
 import chromadb
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
+import time
 
 app = Flask(__name__)
 
-# Dùng local ChromaDB client
-client = chromadb.HttpClient(host="host.docker.internal", port=8001)
+# ✅ Dùng ChromaDB REST API (server mode)
+for i in range(10):
+    try:
+        client = chromadb.HttpClient(host="chromadb", port=8000)
+        break
+    except Exception as e:
+        print(f"❌ Không kết nối được ChromaDB: thử lần {i+1}...")
+        time.sleep(2)
+else:
+    raise RuntimeError("❌ Không thể kết nối với ChromaDB sau 10 lần thử")
 
 embedding_fn = SentenceTransformerEmbeddingFunction(
     model_name="VoVanPhuc/sup-SimCSE-VietNamese-phobert-base"
@@ -19,15 +28,10 @@ def embed_and_search():
     data = request.json
     query = data["query"]
 
-    # ✅ Danh sách danh mục cố định
     categories = ["Tủ lạnh", "Máy giặt", "Tivi", "Điều hòa"]
-
-    # ✅ Tự bắt danh mục từ query người dùng
     matched_category = next((cat for cat in categories if cat.lower() in query.lower()), None)
-
     print("📌 Danh mục được phát hiện:", matched_category)
 
-    # ✅ Truy vấn với bộ lọc nếu có
     if matched_category:
         results = collection.query(
             query_texts=[query],
@@ -38,7 +42,6 @@ def embed_and_search():
         results = collection.query(query_texts=[query], n_results=12)
 
     return jsonify(results)
-
 
 @app.route("/add", methods=["POST"])
 def add_products():

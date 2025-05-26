@@ -1,35 +1,30 @@
-# Hướng Dẫn Cài Đặt & Chạy Ứng Dụng
-## Bước 1: Cài đặt Docker
-- Truy cập: https://www.docker.com/products/docker-desktop
-- Tải Docker Desktop phù hợp hệ điều hành
-- **Sau khi cài xong, KHỞI ĐỘNG Docker Desktop và để chạy ngầm**
+## 1. System Requirements
 
-## Bước 2: Vào thư mục chứa mã Python
+To run the application, please make sure your machine has the following installed:
+
+- Java JDK 17 or higher
+- Python 3.10+
+- Docker Desktop
+- *(Recommended)* IntelliJ IDEA or VS Code for running the Java application
+
+---
+
+## 2. Setup and Execution Instructions
+
+### 🛠️ Step 1: Start the backend
+
+Open a terminal and run:
+
 ```bash
 cd rag_server
+docker-compose up --build
 ```
+Once the services are running, open a new terminal and run:
 
-## Bước 3: Build image
-```bash
-docker build -t rag-server .
-```
-
-## Bước 4: Chạy ChromaDB bằng Docker (port 8001)
-```bash
-docker run -d -p 8001:8000 ghcr.io/chroma-core/chroma:latest
-```
-
-## Bước 5: Chạy Flask server (port 8000)
-```bash
-python app.py
-```
-
-## Bước 6: Gửi dữ liệu sản phẩm vào ChromaDB 
 ```bash
 python load_to_chroma.py
 ```
+### 💻 Step 2: Launch the frontend
+Open the file MainApp.java in the folder src/ecommerce/
 
-## Bước 7: Chạy ứng dụng JavaFX
-```bash
-Mở MainApp.java trong src/ecommerce
-```
+Click Run to start the JavaFX application.
