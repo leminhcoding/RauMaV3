@@ -1,14 +1,34 @@
-version: '3.8'
-
 services:
-  chromadb:
-    image: ghcr.io/chroma-core/chroma:latest
-    ports:
-      - "8001:8000"
-
   flask:
-    build: .
+    build:
+      context: .
+    image: rag-server-flask
+    container_name: rag_server-flask
     ports:
       - "8000:8000"
     depends_on:
       - chromadb
+    volumes:
+      - ../resources:/resources
+
+  chromadb:
+    image: ghcr.io/chroma-core/chroma:latest
+    container_name: rag_server-chromadb
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma-data:/data
+
+  data_loader:
+    build:
+      context: .
+    image: rag-server-flask
+    container_name: rag_server-data-loader
+    depends_on:
+      - flask
+    command: python load_to_chroma.py
+    volumes:
+      - ../resources:/resources
+
+volumes:
+  chroma-data:

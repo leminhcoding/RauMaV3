@@ -1,6 +1,22 @@
 import requests
 import json
 import os
+import time
+
+print("🚀 Waiting for Flask /embed endpoint to be ready...")
+for _ in range(120):
+    try:
+        res = requests.post("http://flask:8000/embed", json={"query": "máy lạnh"})
+        if res.status_code == 200:
+            print("✅ Flask is ready!")
+            break
+    except Exception:
+        pass
+    print("⏳ Waiting for Flask...")
+    time.sleep(1)
+else:
+    print("❌ Flask not ready after timeout.")
+    exit(1)
 
 # Xác định đường dẫn JSON
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -29,7 +45,7 @@ print(f"✅ Tổng số sản phẩm gửi: {len(products)}")
 
 # Gửi lên Flask server
 response = requests.post(
-    "http://localhost:8000/add",
+    "http://flask:8000/add",
     json={"products": products}
 )
 
