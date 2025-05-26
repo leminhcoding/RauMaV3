@@ -19,11 +19,7 @@ Open a terminal and run:
 cd rag_server
 docker-compose up --build
 ```
-Once the services are running, open a new terminal and run:
 
-```bash
-python load_to_chroma.py
-```
 ### 💻 Step 2: Launch the frontend
 Open the file MainApp.java in the folder src/ecommerce/
 
