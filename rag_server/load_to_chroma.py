@@ -3,19 +3,16 @@ import json
 import os
 import time
 
-print("🚀 Waiting for Flask /embed endpoint to be ready...")
-for _ in range(120):
+for i in range(999):
     try:
         res = requests.post("http://flask:8000/embed", json={"query": "máy lạnh"})
         if res.status_code == 200:
-            print("✅ Flask is ready!")
+            print(f"✅ Flask is ready after {i + 1} seconds.")
             break
     except Exception:
         pass
-    print("⏳ Waiting for Flask...")
     time.sleep(1)
 else:
-    print("❌ Flask not ready after timeout.")
     exit(1)
 
 # Xác định đường dẫn JSON
